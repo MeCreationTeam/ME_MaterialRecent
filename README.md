@@ -8,12 +8,13 @@ Modifications can be made on src/com/tenten folder for tests
 On src/com/android/internal/policy/impl, some codes differs from the test folder (tenten)
 
 Credits
-Roman Nurik@github
-JakeWharton@github
-NineOldAndroids
-StackoverFlow.com
-@SpaceCaker
-@PineappleOwl
-@mariozawa
-Lenox Devs
+
+Roman Nurik@github,
+JakeWharton@github,
+NineOldAndroids,
+StackoverFlow.com,
+SpaceCaker@xda,
+PineappleOwl@xda,
+mariozawa@xda,
+Lenox Devs,
 Potato Inc
