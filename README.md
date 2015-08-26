@@ -7,6 +7,10 @@ Modifications can be made on src/com/tenten folder for tests
 
 On src/com/android/internal/policy/impl, some codes differs from the test folder (tenten)
 
+IMPORTANT:
+
+libs must be included (nineoldandroids) otherwise, it will not work. (Bug about facebook crashing because of nineoldandroids)
+
 Credits
 
 Roman Nurik@github,
