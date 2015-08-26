@@ -11,6 +11,8 @@ IMPORTANT:
 
 libs must be included (nineoldandroids) otherwise, it will not work. (Bug about facebook crashing because of nineoldandroids)
 
+Swipe Recent Apps Guide: http://forum.xda-developers.com/galaxy-y/general/guide-swipe-recent-apps-t2792836/post53632342#post53632342
+
 Credits
 
 Roman Nurik@github,
