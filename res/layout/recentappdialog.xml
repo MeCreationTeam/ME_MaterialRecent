@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout android:orientation="vertical" android:id="@+id/mainlayout" android:padding="4.0dip" android:layout_width="fill_parent" android:layout_height="fill_parent"
+                                                               xmlns:android="http://schemas.android.com/apk/res/android">
+    <LinearLayout android:layout_height="fill_parent" android:layout_width="wrap_content" android:id="@+id/swiperecent"
+                  android:gravity="center_horizontal|bottom"
+                  android:layout_above="@+id/taskman" android:layout_centerHorizontal="true"/>
+    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+              android:id="@+id/noapps"
+              android:layout_centerInParent="true"/>
+    <Button android:layout_width="200dp" android:layout_height="wrap_content" android:id="@+id/taskman"
+            android:layout_centerHorizontal="true" android:layout_alignParentBottom="true"/>
+</RelativeLayout>
