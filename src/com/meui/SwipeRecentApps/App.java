@@ -15,7 +15,7 @@
 ** limitations under the License.
 */
 
-package com.tenten.SwipeRecentApps;
+package com.meui.SwipeRecentApps;
 
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
@@ -41,7 +41,5 @@ public class App {
 	public String toString() {
 		return this.name;
 	}
-
-
 
 }

@@ -54,7 +54,7 @@ public class RecentApplicationsDialog extends Dialog implements AdapterView.OnIt
         window.setType(WindowManager.LayoutParams.TYPE_SYSTEM_DIALOG);
         window.setFlags(WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM,
                 WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM);
-        window.setTitle("Recents");
+        //window.setTitle("Recents");
 
         setContentView(getLayout("recentappdialog", "layout", "android"));
 
@@ -91,7 +91,7 @@ public class RecentApplicationsDialog extends Dialog implements AdapterView.OnIt
             }
         });
 
-        noApps.setText("All recent applications killed");
+        noApps.setText("无内容显示");
 
         appsLV = new ListView(c);
         appsLV.setOnItemClickListener(this);
@@ -128,6 +128,7 @@ public class RecentApplicationsDialog extends Dialog implements AdapterView.OnIt
         appsLV.setSelector(com.android.internal.R.color.transparent);
         appsLV.setCacheColorHint(0x00000000);
         appsLV.setFadingEdgeLength(6);
+		appsLV.setClipToPadding(false);
 
         lin.addView(appsLV);
         checkNoAppsRunning();

@@ -1,4 +1,4 @@
-package com.tenten.SwipeRecentApps;
+package com.meui.SwipeRecentApps;
 
 import android.app.Activity;
 import android.content.Context;
