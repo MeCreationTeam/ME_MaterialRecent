@@ -1,23 +1,13 @@
 package tk.zielony.materialrecents;
 
-import android.annotation.TargetApi;
-import android.content.Context;
-import android.graphics.Canvas;
-import android.graphics.Rect;
-import android.graphics.drawable.Drawable;
-import android.os.Build;
-import android.util.AttributeSet;
-import android.view.GestureDetector;
-import android.view.MotionEvent;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.FrameLayout;
-import android.widget.Scroller;
-import android.widget.TextView;
-
-import com.nineoldandroids.view.ViewHelper;
+import android.content.*;
+import android.graphics.*;
+import android.graphics.drawable.*;
+import android.util.*;
+import android.view.*;
+import android.widget.*;
 import com.meui.SwipeRecentApps.*;
+import com.noas.view.*;
 
 /**
  * Created by Marcin on 2015-04-13.
@@ -87,17 +77,17 @@ public class RecentsList extends FrameLayout implements GestureDetector.OnGestur
         if (getChildCount() != adapter.getCount())
             initChildren();
 
-        childTouchRect = new Rect[getChildCount()];
-		 for (int i = 0; i < getChildCount(); i++) {
-		 getChildAt(i).layout(0, 0, getWidth() - getPaddingLeft() - getPaddingRight(), getWidth() - getPaddingLeft() - getPaddingRight());
-		 childTouchRect[i] = new Rect();
-		 }
+        if (childTouchRect == null) childTouchRect = new Rect[getChildCount()];
+		for (int i = 0; i < getChildCount(); i++) {
+			getChildAt(i).layout(0, 0, getWidth() - getPaddingLeft() - getPaddingRight(), getWidth() - getPaddingLeft() - getPaddingRight());
+			childTouchRect[i] = new Rect();
+		}
     }
 
     private void initChildren() {
         removeAllViews();
         for (int i = 0; i < adapter.getCount(); i++) {
-            final View card = View.inflate(getContext(), R.layout.materialrecents_recent_card, null);
+            final View card = View.inflate(getContext(), R.layout.material_recents_card, null);
             TextView title = (TextView) card.findViewById(R.id.materialrecents_recentTitle);
             title.setText(adapter.getTitle(i));
             android.widget.ImageView icon = (android.widget.ImageView) card.findViewById(R.id.materialrecents_recentIcon);
@@ -109,35 +99,45 @@ public class RecentsList extends FrameLayout implements GestureDetector.OnGestur
             }
             View header = card.findViewById(R.id.materialrecents_recentHeader);
             header.setBackgroundColor(adapter.getHeaderColor(i));
-            final ViewGroup cardContent = (ViewGroup) card.findViewById(R.id.materialrecents_recentContent);
-            cardContent.addView(adapter.getView(i));
+            card.findViewById(R.id.materialrecents_recentContent).setBackgroundColor(adapter.getViewColor(i));
 			// if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
 			//     card.setLayerType(View.LAYER_TYPE_HARDWARE, null);
             addView(card, i, generateDefaultLayoutParams());
-            final int finalI = i;
-            card.setOnClickListener(new OnClickListener() {
-					@Override
-					public void onClick(View view) {
-						if (onItemClickListener != null)
-							onItemClickListener.onItemClick(card, finalI);
-					}
-				});
+            /*final int finalI = i;
+			 card.setOnTouchListener(new OnTouchListener() {
+
+			 @Override
+			 public boolean onTouch(View p1, MotionEvent p2) {
+			 // TODO: Implement this method
+			 if (onItemClickListener != null)
+			 onItemClickListener.onItemClick(card, finalI);
+
+			 return true;
+			 }});
+			 /*
+			 @Override
+			 public void onClick(View view) {
+			 if (onItemClickListener != null)
+			 onItemClickListener.onItemClick(card, finalI);
+			 }
+			 });*/
         }
     }
 
     private void layoutChildren() {
-        int width = getWidth() - getPaddingLeft() - getPaddingRight();
+		int width = getWidth() - getPaddingLeft() - getPaddingRight();
 		int height = getHeight() - getPaddingTop() - getPaddingBottom();
+		float topSpace = (height - width);
         for (int i = 0; i < getChildCount(); i++) {
-            float topSpace = height - width;
-            int y = (int) (topSpace * Math.pow(2, (i * width - scroll) / (float) width));
+			final View currentChild = getChildAt(i);
+            int y = (int) (topSpace * Math.pow(2, (i * (width) - scroll) / (float) (width)));
             float scale = (float) (-Math.pow(2, -y / topSpace / 10.0f) + 19.0f / 10);
             childTouchRect[i].set(getPaddingLeft(), y + getPaddingTop(), (int) (scale * (getPaddingLeft() + getWidth() - getPaddingLeft() - getPaddingRight())), (int) (scale * (y + getPaddingTop() + getWidth() - getPaddingLeft() - getPaddingRight())));
-			getChildAt(i).layout(0, 0, getWidth() - getPaddingLeft() - getPaddingRight(), height);//getWidth() - getPaddingLeft() - getPaddingRight());
-            ViewHelper.setTranslationX(getChildAt(i), getPaddingLeft());
-            ViewHelper.setTranslationY(getChildAt(i), y + getPaddingTop());
-            ViewHelper.setScaleX(getChildAt(i), scale);
-            ViewHelper.setScaleY(getChildAt(i), scale);
+			currentChild.layout(0, 0, getWidth() - getPaddingLeft() - getPaddingRight(), getHeight() - getPaddingTop() - getPaddingBottom()); //getWidth() - getPaddingLeft() - getPaddingRight());
+            ViewHelper.setTranslationX(currentChild, getPaddingLeft());
+            ViewHelper.setTranslationY(currentChild, y + getPaddingTop());
+            ViewHelper.setScaleX(currentChild, scale);
+            ViewHelper.setScaleY(currentChild, scale);
         }
     }
 
@@ -159,10 +159,23 @@ public class RecentsList extends FrameLayout implements GestureDetector.OnGestur
 		isFirst = false;
     }
 
+	/*@Override
+	 public boolean dispatchTouchEvent(MotionEvent ev) {
+	 // TODO: Implement this method
+	 gestureDetector.onTouchEvent(ev);if (ev.getAction() == MotionEvent.ACTION_DOWN || ev.getAction() == MotionEvent.ACTION_MOVE) {
+	 forceFinished();
+	 }
+
+	 return true;
+	 }*/
+
+
+	/*
 	 @Override
 	 public boolean dispatchTouchEvent(MotionEvent event) {
+
 	 if (gestureDetector.onTouchEvent(event)) {
-	 for (int i = getChildCount() - 2; i >= 0; i--) {
+	 for (int i = getChildCount() - 1;i >= 0; i--) { // TEST!
 	 MotionEvent e = MotionEvent.obtain(event);
 	 event.setAction(MotionEvent.ACTION_CANCEL);
 	 e.offsetLocation(-childTouchRect[i].left, -childTouchRect[i].top);
@@ -171,11 +184,11 @@ public class RecentsList extends FrameLayout implements GestureDetector.OnGestur
 	 return true;
 	 }
 
-	 if (event.getAction() == MotionEvent.ACTION_DOWN || event.getAction() == MotionEvent.ACTION_MOVE){
+	 if (event.getAction() == MotionEvent.ACTION_DOWN || event.getAction() == MotionEvent.ACTION_MOVE) {
 	 forceFinished();
 	 }
 
-	 for (int i = getChildCount() - 1;i >= 0; i--){
+	 for (int i = getChildCount() - 1;i >= 0; i--) {
 	 if (childTouchRect[i].contains((int) event.getX(), (int) event.getY())) {
 	 MotionEvent e = MotionEvent.obtain(event);
 	 e.offsetLocation(-childTouchRect[i].left, -childTouchRect[i].top);
@@ -185,14 +198,14 @@ public class RecentsList extends FrameLayout implements GestureDetector.OnGestur
 	 }
 
 	 return true;
-	 }
+	 }*/
 	@Override
-	public boolean onInterceptTouchEvent(final MotionEvent event) {
+	public boolean onInterceptTouchEvent(MotionEvent event) {
 		return gestureDetector.onTouchEvent(event);
 	}
 	@Override
 	public boolean onTouchEvent(MotionEvent event) {
-		return event.getAction() == MotionEvent.ACTION_DOWN || gestureDetector.onTouchEvent(event);
+		return /*event.getAction() == MotionEvent.ACTION_DOWN ||= */ gestureDetector.onTouchEvent(event);
 	}
     @Override
     public boolean onDown(MotionEvent motionEvent) {
@@ -206,8 +219,14 @@ public class RecentsList extends FrameLayout implements GestureDetector.OnGestur
 
     @Override
     public boolean onSingleTapUp(MotionEvent event) {
-
-        return false;
+		if (onItemClickListener == null) return true;
+		for (int i = getChildCount() - 1;i >= 0; i--) {
+			if (childTouchRect[i].contains((int) event.getX(), (int) event.getY())) {
+				onItemClickListener.onItemClick(getChildAt(i), i);
+				break;
+			}
+		}
+        return true;
     }
 
     @Override
@@ -242,17 +261,17 @@ public class RecentsList extends FrameLayout implements GestureDetector.OnGestur
 	}
 
     /*private void doScrolling() {
-		  if (scroller.isFinished())
-		     return;
+	 if (scroller.isFinished())
+	 return;
 
-		 boolean more = scroller.computeScrollOffset();
-		  int y = scroller.getCurrY();
+	 boolean more = scroller.computeScrollOffset();
+	 int y = scroller.getCurrY();
 
-		  scroll = Math.max(0, Math.min(y, getMaxScroll()));
+	 scroll = Math.max(0, Math.min(y, getMaxScroll()));
 
-		   if (more)
-		        postInvalidate();
-    }*/
+	 if (more)
+	 postInvalidate();
+	 }*/
 
     boolean isFlinging() {
         return !scroller.isFinished();

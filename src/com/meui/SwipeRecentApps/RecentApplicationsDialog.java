@@ -11,7 +11,7 @@ import android.util.*;
 import android.view.*;
 import android.widget.*;
 import com.android.internal.policy.impl.*;
-import com.nineoldandroids.view.*;
+import com.noas.view.*;
 import java.util.*;
 import tk.zielony.materialrecents.*;
 
@@ -47,9 +47,12 @@ public class RecentApplicationsDialog extends Dialog { //implements AdapterView.
         window.requestFeature(Window.FEATURE_NO_TITLE);
 		window.setBackgroundDrawableResource(android.R.color.transparent);
         window.setFlags(WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER, WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER);
+		//window.setType(WindowManager.LayoutParams.TYPE_SYSTEM_DIALOG);// You must have this line in your smail code !
+		window.setFlags(WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM,
+						WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM);
         //window.setTitle("Recents");
 
-        setContentView(getLayout("recentappdialog", "layout", "com.meui.SwipeRecentApps"));
+        setContentView(R.layout.recent_apps_dialog);
 
         final WindowManager.LayoutParams params = window.getAttributes();
         params.width = WindowManager.LayoutParams.FILL_PARENT;
@@ -61,10 +64,10 @@ public class RecentApplicationsDialog extends Dialog { //implements AdapterView.
             sStatusBar = (StatusBarManager) c.getSystemService(Context.STATUS_BAR_SERVICE);
         }
 
-        taskman = (Button) findViewById(getLayout("taskman", "id", "com.meui.SwipeRecentApps"));
+        taskman = (Button) findViewById(R.id.taskman);
         //lin = (LinearLayout) findViewById(getLayout("swiperecent", "id", "com.meui.SwipeRecentApps"));
-        noApps = (TextView) findViewById(getLayout("noapps", "id", "com.meui.SwipeRecentApps"));
-        mainlayout = (RelativeLayout) findViewById(getLayout("mainlayout", "id", "com.meui.SwipeRecentApps"));
+        noApps = (TextView) findViewById(R.id.noapps);
+        mainlayout = (RelativeLayout) findViewById(R.id.mainlayout);
         mainlayout.setOnClickListener(new View.OnClickListener() {
 				@Override
 				public void onClick(View view) {
@@ -84,8 +87,7 @@ public class RecentApplicationsDialog extends Dialog { //implements AdapterView.
 				}
 			});
 
-        noApps.setText(getLayout("no_recent_tasks", "string", "android"));
-
+        noApps.setText(com.android.internal.R.string.no_recent_tasks);// getLayout("no_recent_tasks", "string", "android"));
         //appsLV = new ListView(c);
         //appsLV.setOnItemClickListener(this);
 		// registerForContextMenu(appsLV);
@@ -95,7 +97,7 @@ public class RecentApplicationsDialog extends Dialog { //implements AdapterView.
         //adapter = new AppsArrayAdapter(c, getLayout("appsview_item", "layout", "com.meui.SwipeRecentApps"), appsList);
         //appsLV.setAdapter(adapter);
 
-		mRecents = (RecentsList)findViewById(getLayout("recent_frame", "id", "com.meui.SwipeRecentApps"));
+		mRecents = (RecentsList)findViewById(R.id.recent_frame);
 		//mFrame.setAdapter(adapter);
 
         /* touchListener = new SwipeDismissListViewTouchListener(
@@ -141,12 +143,12 @@ public class RecentApplicationsDialog extends Dialog { //implements AdapterView.
 	 adapter.clear();
 	 adapter.notifyDataSetChanged();
 	 }*/
-    public void killApp(String PackageName) {
-        am.killBackgroundProcesses(PackageName);
-        am.restartPackage(PackageName);
-        if (!PackageName.equals("com.android.stk")) {
-            am.forceStopPackage(PackageName);}
-    }
+    /*public void killApp(String PackageName) {
+	 am.killBackgroundProcesses(PackageName);
+	 am.restartPackage(PackageName);
+	 if (!PackageName.equals("com.android.stk")) {
+	 am.forceStopPackage(PackageName);}
+	 }*/
 
     @Override
     protected void onStart() {
@@ -169,10 +171,8 @@ public class RecentApplicationsDialog extends Dialog { //implements AdapterView.
 				}
 
 				@Override
-				public View getView(int position) {
-					FrameLayout card = new FrameLayout(c);
-					card.setBackgroundColor(cardColors[appsList.size() - position - 1]);
-					return card;
+				public int getViewColor(int position) {
+					return cardColors[appsList.size() - position - 1];
 				}
 
 				@Override
@@ -234,8 +234,8 @@ public class RecentApplicationsDialog extends Dialog { //implements AdapterView.
 			context.getSystemService(Context.ACTIVITY_SERVICE);
 		List<ActivityManager.RecentTaskInfo> recentTasks =am.getRecentTasks(MAX_RECENT_TASKS,//存疑：API11前是不是只有WITH_EXCLUDED?
 																			ActivityManager.RECENT_IGNORE_UNAVAILABLE);
-		if (Build.VERSION.SDK_INT > 20) {
-			for (int i=0;i < 3;i++) {
+		if (Build.VERSION.SDK_INT > 20) { // For test only
+			for (int i=0; i < 3; i++) {
 				recentTasks.addAll(1, recentTasks);
 			}
 			recentTasks.remove(0);
@@ -290,13 +290,22 @@ public class RecentApplicationsDialog extends Dialog { //implements AdapterView.
 
 				@Override
 				public void onItemClick(View view, int position) {
-					// Toast.makeText(context, "POSITION = " + position, Toast.LENGTH_SHORT).show();
-					context.startActivity(appsList.get(appsList.size() - position - 1).intent);
+					if (Build.VERSION.SDK_INT > 20) Toast.makeText(context, "POSITION = " + position, Toast.LENGTH_SHORT).show(); // For test only
+					final Intent intent = appsList.get(appsList.size() - position - 1).intent;
+					if (intent != null) {
+						intent.addFlags(Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY);
+						try {
+							c.startActivity(intent);
+						} catch (ActivityNotFoundException e) {
+							Log.w("Recent", "Unable to launch recent task", e);
+						}
+					}
+					dismiss();
 				}
 			});
     }
 
-    public int getLayout(String mDrawableName, String typeName, String packName) {
+    /*public int getLayout(String mDrawableName, String typeName, String packName) {
         int resID = 0;
         try {
             PackageManager manager = getContext().getPackageManager();
@@ -307,7 +316,7 @@ public class RecentApplicationsDialog extends Dialog { //implements AdapterView.
             e.printStackTrace();
         }
         return resID;
-    }
+    }*/
 
     private BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
         @Override
