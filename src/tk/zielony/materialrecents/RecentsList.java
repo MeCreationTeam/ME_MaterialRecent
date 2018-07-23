@@ -20,11 +20,15 @@ public class RecentsList extends FrameLayout implements GestureDetector.OnGestur
     GestureDetector gestureDetector;// = new GestureDetector(this);
     int scroll = 0;
     OnItemClickListener onItemClickListener;
+	OnItemLongClickListener onItemLongClickListener;
     Rect childTouchRect[];
 
     public interface OnItemClickListener {
         void onItemClick(View view, int position);
     }
+	public interface OnItemLongClickListener {
+		void onItemLongClick(int position);
+	}
 
     public RecentsList(Context context) {
         super(context);
@@ -52,12 +56,15 @@ public class RecentsList extends FrameLayout implements GestureDetector.OnGestur
 		setClipChildren(false);
 	    setClipToPadding(false);
 		gestureDetector = new GestureDetector(getContext(), this);
-		gestureDetector.setIsLongpressEnabled(false);
+		gestureDetector.setIsLongpressEnabled(true);
     }
 
     public void setOnItemClickListener(OnItemClickListener onItemClickListener) {
         this.onItemClickListener = onItemClickListener;
     }
+	public void setOnItemLongClickListener(OnItemLongClickListener onItemLongClickListener) {
+		this.onItemLongClickListener = onItemLongClickListener;
+	}
 
     public RecentsAdapter getAdapter() {
         return adapter;
@@ -251,7 +258,15 @@ public class RecentsList extends FrameLayout implements GestureDetector.OnGestur
     }
 
     @Override
-    public void onLongPress(MotionEvent motionEvent) {
+    public void onLongPress(MotionEvent event) {
+		if (onItemLongClickListener == null)
+			return;
+		for (int i = getChildCount() - 1;i >= 0; i--) {
+			if (childTouchRect[i].contains((int) event.getX(), (int) event.getY())) {
+				onItemLongClickListener.onItemLongClick(i);
+				break;
+			}
+		}
     }
 
     void startScrolling(float initialVelocity) {

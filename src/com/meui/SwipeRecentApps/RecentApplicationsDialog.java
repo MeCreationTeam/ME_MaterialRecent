@@ -74,7 +74,6 @@ public class RecentApplicationsDialog extends Dialog { //implements AdapterView.
 					dismiss();
 				}
 			});
-        taskman.setText("结束进程");
         taskman.setOnClickListener(new View.OnClickListener() {
 				@Override
 				public void onClick(View view) {
@@ -303,20 +302,37 @@ public class RecentApplicationsDialog extends Dialog { //implements AdapterView.
 					dismiss();
 				}
 			});
+		mRecents.setOnItemLongClickListener(new RecentsList.OnItemLongClickListener(){
+
+				@Override
+				public void onItemLongClick(int position) {
+					try {
+						String packageName = appsList.get(appsList.size() - position - 1).pkgName;
+						am.killBackgroundProcesses(packageName);
+						am.restartPackage(packageName);
+						if (!packageName.equals("com.android.stk")) {
+							am.forceStopPackage(packageName);
+						}
+					} catch (Exception ex) {
+						Log.w("Recent", "LongPress: ", ex);
+					}
+					Toast.makeText(context, 0x104044c, Toast.LENGTH_SHORT).show();
+				}
+			});
     }
 
     /*public int getLayout(String mDrawableName, String typeName, String packName) {
-        int resID = 0;
-        try {
-            PackageManager manager = getContext().getPackageManager();
-            Resources mApk1Resources = manager.getResourcesForApplication(packName);
+	 int resID = 0;
+	 try {
+	 PackageManager manager = getContext().getPackageManager();
+	 Resources mApk1Resources = manager.getResourcesForApplication(packName);
 
-            resID = mApk1Resources.getIdentifier(mDrawableName, typeName, packName);
-        } catch (PackageManager.NameNotFoundException e) {
-            e.printStackTrace();
-        }
-        return resID;
-    }*/
+	 resID = mApk1Resources.getIdentifier(mDrawableName, typeName, packName);
+	 } catch (PackageManager.NameNotFoundException e) {
+	 e.printStackTrace();
+	 }
+	 return resID;
+	 }*/
 
     private BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
         @Override

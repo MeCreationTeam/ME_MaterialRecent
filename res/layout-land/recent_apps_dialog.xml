@@ -8,12 +8,6 @@
 	android:layout_gravity="center_horizontal"
 	android:paddingLeft="60dp"
 	android:paddingRight="60dp">
-	<Button
-		android:layout_width="240dp"
-		android:layout_height="42dp"
-		android:id="@+id/taskman"
-        android:layout_centerHorizontal="true"
-		android:layout_alignParentBottom="true"/>
 
 	<tk.zielony.materialrecents.RecentsList
 		android:layout_height="match_parent"
@@ -21,11 +15,19 @@
 		android:id="@+id/recent_frame"
 		android:orientation="vertical"
 		android:gravity="center_horizontal|bottom"
-        android:layout_above="@+id/taskman"
 		android:layout_gravity="center_horizontal"
 	    android:layout_centerHorizontal="true"
 		android:clickable="true"/>
 
+	<Button
+		android:layout_width="72dp"
+		android:layout_height="72dp"
+		android:id="@+id/taskman"
+		android:layout_marginRight="16dp"
+		android:layout_alignParentBottom="true"
+		android:layout_alignParentRight="true"
+		android:background="@drawable/ic_clean"/>
+	
     <TextView 
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
