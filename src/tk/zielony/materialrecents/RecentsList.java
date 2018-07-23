@@ -65,6 +65,7 @@ public class RecentsList extends FrameLayout implements GestureDetector.OnGestur
 
     public void setAdapter(RecentsAdapter adapter) {
         this.adapter = adapter;
+		initChildren();
     }
 
     @Override
@@ -73,9 +74,6 @@ public class RecentsList extends FrameLayout implements GestureDetector.OnGestur
 
         if (adapter == null)
             return;
-
-        if (getChildCount() != adapter.getCount())
-            initChildren();
 
         if (childTouchRect == null) childTouchRect = new Rect[getChildCount()];
 		for (int i = 0; i < getChildCount(); i++) {
@@ -127,19 +125,35 @@ public class RecentsList extends FrameLayout implements GestureDetector.OnGestur
     private void layoutChildren() {
 		int width = getWidth() - getPaddingLeft() - getPaddingRight();
 		int height = getHeight() - getPaddingTop() - getPaddingBottom();
-		float topSpace = (height - width);
+		float topSpace = Math.abs(height - width) ;
         for (int i = 0; i < getChildCount(); i++) {
 			final View currentChild = getChildAt(i);
             int y = (int) (topSpace * Math.pow(2, (i * (width) - scroll) / (float) (width)));
             float scale = (float) (-Math.pow(2, -y / topSpace / 10.0f) + 19.0f / 10);
-            childTouchRect[i].set(getPaddingLeft(), y + getPaddingTop(), (int) (scale * (getPaddingLeft() + getWidth() - getPaddingLeft() - getPaddingRight())), (int) (scale * (y + getPaddingTop() + getWidth() - getPaddingLeft() - getPaddingRight())));
-			currentChild.layout(0, 0, getWidth() - getPaddingLeft() - getPaddingRight(), getHeight() - getPaddingTop() - getPaddingBottom()); //getWidth() - getPaddingLeft() - getPaddingRight());
-            ViewHelper.setTranslationX(currentChild, getPaddingLeft());
+            childTouchRect[i].set(getPaddingLeft(), y + getPaddingTop(), (int) (scale * (getPaddingLeft() + getWidth() - getPaddingLeft() - getPaddingRight())), (int) (scale * (y + getPaddingTop() + width)));
+			currentChild.layout(0, 0, width, width); //getWidth() - getPaddingLeft() - getPaddingRight());
+			ViewHelper.setTranslationX(currentChild, getPaddingLeft());
             ViewHelper.setTranslationY(currentChild, y + getPaddingTop());
             ViewHelper.setScaleX(currentChild, scale);
             ViewHelper.setScaleY(currentChild, scale);
         }
     }
+	/*private void layoutChildren() {
+	 int width = getWidth() - getPaddingLeft() - getPaddingRight();
+	 int height = getHeight() - getPaddingTop() - getPaddingBottom();
+	 float topSpace = (height - width);
+	 for (int i = 0; i < getChildCount(); i++) {
+	 final View currentChild = getChildAt(i);
+	 int y = (int) Math.abs(topSpace * Math.pow(2, (i * Math.min(width,height) - scroll) / (float) Math.min(width,height)));
+	 float scale = (float) (-Math.pow(2, -y / topSpace / 10.0f) + 19.0f / 10);
+	 childTouchRect[i].set(getPaddingLeft(), y + getPaddingTop(), (int) (scale * (getPaddingLeft() + getWidth() - getPaddingLeft() - getPaddingRight())), (int) (scale * (y + getPaddingTop() + getWidth() - getPaddingLeft() - getPaddingRight())));
+	 currentChild.layout(0, 0, getWidth() - getPaddingLeft() - getPaddingRight(), getHeight() - getPaddingTop() - getPaddingBottom()); //getWidth() - getPaddingLeft() - getPaddingRight());
+	 ViewHelper.setTranslationX(currentChild, getPaddingLeft());
+	 ViewHelper.setTranslationY(currentChild, y + getPaddingTop());
+	 ViewHelper.setScaleX(currentChild, scale);
+	 ViewHelper.setScaleY(currentChild, scale);
+	 }
+	 }*/
 
     private int getMaxScroll() {
         return (getChildCount() - 1) * (getWidth() - getPaddingLeft() - getPaddingRight());
@@ -201,11 +215,11 @@ public class RecentsList extends FrameLayout implements GestureDetector.OnGestur
 	 }*/
 	@Override
 	public boolean onInterceptTouchEvent(MotionEvent event) {
-		return gestureDetector.onTouchEvent(event);
+		return getAdapter() != null & gestureDetector.onTouchEvent(event);
 	}
 	@Override
 	public boolean onTouchEvent(MotionEvent event) {
-		return /*event.getAction() == MotionEvent.ACTION_DOWN ||= */ gestureDetector.onTouchEvent(event);
+		return event.getAction() == MotionEvent.ACTION_DOWN || getAdapter() != null & gestureDetector.onTouchEvent(event);
 	}
     @Override
     public boolean onDown(MotionEvent motionEvent) {
@@ -233,7 +247,7 @@ public class RecentsList extends FrameLayout implements GestureDetector.OnGestur
     public boolean onScroll(MotionEvent motionEvent, MotionEvent motionEvent2, float v, float v2) {
         scroll = (int) Math.max(0, Math.min(scroll + v2, getMaxScroll()));
         postInvalidate();
-        return true;
+        return false;
     }
 
     @Override
