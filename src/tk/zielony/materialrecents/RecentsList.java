@@ -8,6 +8,7 @@ import android.view.*;
 import android.widget.*;
 import com.meui.SwipeRecentApps.*;
 import com.noas.view.*;
+import android.content.res.*;
 
 /**
  * Created by Marcin on 2015-04-13.
@@ -22,6 +23,7 @@ public class RecentsList extends FrameLayout implements GestureDetector.OnGestur
     OnItemClickListener onItemClickListener;
 	OnItemLongClickListener onItemLongClickListener;
     Rect childTouchRect[];
+	RecentApplicationsDialog dialog;
 
     public interface OnItemClickListener {
         void onItemClick(View view, int position);
@@ -88,6 +90,19 @@ public class RecentsList extends FrameLayout implements GestureDetector.OnGestur
 			childTouchRect[i] = new Rect();
 		}
     }
+
+	public void setRecent(RecentApplicationsDialog d) {
+		this.dialog = d;
+	}
+
+	@Override
+	protected void onConfigurationChanged(Configuration newConfig) {
+		super.onConfigurationChanged(newConfig);
+		if (dialog != null) {
+			dialog.dismiss();
+		}
+		dialog = null;
+	}
 
     private void initChildren() {
         removeAllViews();

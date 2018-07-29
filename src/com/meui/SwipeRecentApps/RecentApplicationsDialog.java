@@ -133,7 +133,7 @@ public class RecentApplicationsDialog extends Dialog { //implements AdapterView.
 		//lp.width=ViewGroup.LayoutParams.MATCH_PARENT;
         //lin.addView(appsLV,lp);
 		//lp=null;
-
+		mRecents.setRecent(this);
         checkNoAppsRunning();
     }
 
@@ -148,7 +148,6 @@ public class RecentApplicationsDialog extends Dialog { //implements AdapterView.
 	 if (!PackageName.equals("com.android.stk")) {
 	 am.forceStopPackage(PackageName);}
 	 }*/
-
     @Override
     protected void onStart() {
         super.onStart();
@@ -156,7 +155,40 @@ public class RecentApplicationsDialog extends Dialog { //implements AdapterView.
         updateRecentTasks();
         //adapter.notifyDataSetChanged();
         checkNoAppsRunning();
+		mRecents.setOnItemClickListener(new RecentsList.OnItemClickListener(){
 
+				@Override
+				public void onItemClick(View view, int position) {
+					if (Build.VERSION.SDK_INT > 20) Toast.makeText(getContext(), "POSITION = " + position, Toast.LENGTH_SHORT).show(); // For test only
+					final Intent intent = appsList.get(appsList.size() - position - 1).intent;
+					if (intent != null) {
+						intent.addFlags(Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY);
+						try {
+							c.startActivity(intent);
+						} catch (ActivityNotFoundException e) {
+							Log.w("Recent", "Unable to launch recent task", e);
+						}
+					}
+					dismiss();
+				}
+			});
+		mRecents.setOnItemLongClickListener(new RecentsList.OnItemLongClickListener(){
+
+				@Override
+				public void onItemLongClick(int position) {
+					try {
+						String packageName = appsList.get(appsList.size() - position - 1).pkgName;
+						am.killBackgroundProcesses(packageName);
+						am.restartPackage(packageName);
+						if (!packageName.equals("com.android.stk")) {
+							am.forceStopPackage(packageName);
+						}
+					} catch (Exception ex) {
+						Log.w("Recent", "LongPress: ", ex);
+					}
+					Toast.makeText(getContext(), 0x104044c, Toast.LENGTH_SHORT).show();
+				}
+			});
         // receive broadcasts
         getContext().registerReceiver(mBroadcastReceiver, mBroadcastIntentFilter);
 		final int[] cardColors=new int[]{0xff009688,0xff2196f3,0xff9c27b0,0xffff9800,0xff795548,0xff9e9e9e,0xff607d8b, 0xffffffff};
@@ -198,7 +230,6 @@ public class RecentApplicationsDialog extends Dialog { //implements AdapterView.
         // stop receiving broadcasts
         getContext().unregisterReceiver(mBroadcastReceiver);
     }
-
     /*@Override
 	 public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
 	 Intent intent = (Intent)view.getTag(R.id.noapps);
@@ -239,6 +270,7 @@ public class RecentApplicationsDialog extends Dialog { //implements AdapterView.
 			}
 			recentTasks.remove(0);
 		}
+		appsList.removeAll(appsList);
         ActivityInfo homeInfo =new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME).resolveActivityInfo(pm, 0);
 
         int index = 0;
@@ -285,40 +317,6 @@ public class RecentApplicationsDialog extends Dialog { //implements AdapterView.
 				}
             }
         }
-		mRecents.setOnItemClickListener(new RecentsList.OnItemClickListener(){
-
-				@Override
-				public void onItemClick(View view, int position) {
-					if (Build.VERSION.SDK_INT > 20) Toast.makeText(context, "POSITION = " + position, Toast.LENGTH_SHORT).show(); // For test only
-					final Intent intent = appsList.get(appsList.size() - position - 1).intent;
-					if (intent != null) {
-						intent.addFlags(Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY);
-						try {
-							c.startActivity(intent);
-						} catch (ActivityNotFoundException e) {
-							Log.w("Recent", "Unable to launch recent task", e);
-						}
-					}
-					dismiss();
-				}
-			});
-		mRecents.setOnItemLongClickListener(new RecentsList.OnItemLongClickListener(){
-
-				@Override
-				public void onItemLongClick(int position) {
-					try {
-						String packageName = appsList.get(appsList.size() - position - 1).pkgName;
-						am.killBackgroundProcesses(packageName);
-						am.restartPackage(packageName);
-						if (!packageName.equals("com.android.stk")) {
-							am.forceStopPackage(packageName);
-						}
-					} catch (Exception ex) {
-						Log.w("Recent", "LongPress: ", ex);
-					}
-					Toast.makeText(context, 0x104044c, Toast.LENGTH_SHORT).show();
-				}
-			});
     }
 
     /*public int getLayout(String mDrawableName, String typeName, String packName) {
