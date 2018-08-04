@@ -1,4 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-	<style name="ME" parents="@android:style/Theme.Wallpaper.NoTitleBar"/>
+	<style name="ME" parent="@android:style/Theme.Wallpaper.NoTitleBar"/>
 </resources>

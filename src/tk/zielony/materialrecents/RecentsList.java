@@ -1,6 +1,7 @@
 package tk.zielony.materialrecents;
 
 import android.content.*;
+import android.content.res.*;
 import android.graphics.*;
 import android.graphics.drawable.*;
 import android.util.*;
@@ -8,7 +9,6 @@ import android.view.*;
 import android.widget.*;
 import com.meui.SwipeRecentApps.*;
 import com.noas.view.*;
-import android.content.res.*;
 
 /**
  * Created by Marcin on 2015-04-13.
@@ -18,7 +18,7 @@ import android.content.res.*;
 public class RecentsList extends FrameLayout implements GestureDetector.OnGestureListener {
     Scroller scroller;
     RecentsAdapter adapter;
-    GestureDetector gestureDetector;// = new GestureDetector(this);
+    GestureDetector gestureDetector;
     int scroll = 0;
     OnItemClickListener onItemClickListener;
 	OnItemLongClickListener onItemLongClickListener;
@@ -46,12 +46,6 @@ public class RecentsList extends FrameLayout implements GestureDetector.OnGestur
         super(context, attrs, defStyleAttr);
         initRecentsList();
     }
-
-    /* @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-	 public RecentsList(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
-	 super(context, attrs, defStyleAttr, defStyleRes);
-	 initRecentsList();
-	 } */
 
     private void initRecentsList() {
         scroller = new Scroller(getContext());
@@ -120,21 +114,8 @@ public class RecentsList extends FrameLayout implements GestureDetector.OnGestur
             View header = card.findViewById(R.id.materialrecents_recentHeader);
             header.setBackgroundColor(adapter.getHeaderColor(i));
             card.findViewById(R.id.materialrecents_recentContent).setBackgroundColor(adapter.getViewColor(i));
-			// if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
-			//     card.setLayerType(View.LAYER_TYPE_HARDWARE, null);
-            addView(card, i, generateDefaultLayoutParams());
+			addView(card, i, generateDefaultLayoutParams());
             /*final int finalI = i;
-			 card.setOnTouchListener(new OnTouchListener() {
-
-			 @Override
-			 public boolean onTouch(View p1, MotionEvent p2) {
-			 // TODO: Implement this method
-			 if (onItemClickListener != null)
-			 onItemClickListener.onItemClick(card, finalI);
-
-			 return true;
-			 }});
-			 /*
 			 @Override
 			 public void onClick(View view) {
 			 if (onItemClickListener != null)
@@ -160,22 +141,6 @@ public class RecentsList extends FrameLayout implements GestureDetector.OnGestur
             ViewHelper.setScaleY(currentChild, scale);
         }
     }
-	/*private void layoutChildren() {
-	 int width = getWidth() - getPaddingLeft() - getPaddingRight();
-	 int height = getHeight() - getPaddingTop() - getPaddingBottom();
-	 float topSpace = (height - width);
-	 for (int i = 0; i < getChildCount(); i++) {
-	 final View currentChild = getChildAt(i);
-	 int y = (int) Math.abs(topSpace * Math.pow(2, (i * Math.min(width,height) - scroll) / (float) Math.min(width,height)));
-	 float scale = (float) (-Math.pow(2, -y / topSpace / 10.0f) + 19.0f / 10);
-	 childTouchRect[i].set(getPaddingLeft(), y + getPaddingTop(), (int) (scale * (getPaddingLeft() + getWidth() - getPaddingLeft() - getPaddingRight())), (int) (scale * (y + getPaddingTop() + getWidth() - getPaddingLeft() - getPaddingRight())));
-	 currentChild.layout(0, 0, getWidth() - getPaddingLeft() - getPaddingRight(), getHeight() - getPaddingTop() - getPaddingBottom()); //getWidth() - getPaddingLeft() - getPaddingRight());
-	 ViewHelper.setTranslationX(currentChild, getPaddingLeft());
-	 ViewHelper.setTranslationY(currentChild, y + getPaddingTop());
-	 ViewHelper.setScaleX(currentChild, scale);
-	 ViewHelper.setScaleY(currentChild, scale);
-	 }
-	 }*/
 
     private int getMaxScroll() {
         return (getChildCount() - 1) * (getWidth() - getPaddingLeft() - getPaddingRight());
@@ -186,25 +151,11 @@ public class RecentsList extends FrameLayout implements GestureDetector.OnGestur
     protected void dispatchDraw(Canvas canvas) {
 		if (isFirst) {
 			scroll = getMaxScroll();
-			//postInvalidate();
 		}
         layoutChildren();
-        //requestLayout();
         super.dispatchDraw(canvas);
-        //doScrolling();
-		isFirst = false;
+        isFirst = false;
     }
-
-	/*@Override
-	 public boolean dispatchTouchEvent(MotionEvent ev) {
-	 // TODO: Implement this method
-	 gestureDetector.onTouchEvent(ev);if (ev.getAction() == MotionEvent.ACTION_DOWN || ev.getAction() == MotionEvent.ACTION_MOVE) {
-	 forceFinished();
-	 }
-
-	 return true;
-	 }*/
-
 
 	/*
 	 @Override
@@ -303,19 +254,6 @@ public class RecentsList extends FrameLayout implements GestureDetector.OnGestur
 			}
 		}
 	}
-
-    /*private void doScrolling() {
-	 if (scroller.isFinished())
-	 return;
-
-	 boolean more = scroller.computeScrollOffset();
-	 int y = scroller.getCurrY();
-
-	 scroll = Math.max(0, Math.min(y, getMaxScroll()));
-
-	 if (more)
-	 postInvalidate();
-	 }*/
 
     boolean isFlinging() {
         return !scroller.isFinished();

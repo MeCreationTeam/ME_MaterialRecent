@@ -3,30 +3,22 @@ package com.meui.SwipeRecentApps;
 import android.app.*;
 import android.content.*;
 import android.content.pm.*;
-import android.content.res.*;
 import android.graphics.drawable.*;
-import android.net.*;
 import android.os.*;
 import android.util.*;
 import android.view.*;
 import android.widget.*;
 import com.android.internal.policy.impl.*;
-import com.noas.view.*;
 import java.util.*;
 import tk.zielony.materialrecents.*;
 
-public class RecentApplicationsDialog extends Dialog { //implements AdapterView.OnItemClickListener {
-
-    //ListView appsLV;
-    //AppsArrayAdapter adapter;
+public class RecentApplicationsDialog extends Dialog { 
   	private List<App> appsList = new ArrayList<App>();
     private ActivityManager am;
     private static int NUM_BUTTONS = 7;
     private static int MAX_RECENT_TASKS = 7;//NUM_BUTTONS * 2;
     Context c;
     private TextView noApps;
-    //SwipeDismissListViewTouchListener touchListener;
-    //LinearLayout lin;
     private Button taskman;
     private RelativeLayout mainlayout;
     private static StatusBarManager sStatusBar;
@@ -50,8 +42,7 @@ public class RecentApplicationsDialog extends Dialog { //implements AdapterView.
 		//window.setType(WindowManager.LayoutParams.TYPE_SYSTEM_DIALOG);// You must have this line in your smail code !
 		window.setFlags(WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM,
 						WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM);
-        //window.setTitle("Recents");
-
+ 
         setContentView(R.layout.recent_apps_dialog);
 
         final WindowManager.LayoutParams params = window.getAttributes();
@@ -65,7 +56,6 @@ public class RecentApplicationsDialog extends Dialog { //implements AdapterView.
         }
 
         taskman = (Button) findViewById(R.id.taskman);
-        //lin = (LinearLayout) findViewById(getLayout("swiperecent", "id", "com.meui.SwipeRecentApps"));
         noApps = (TextView) findViewById(R.id.noapps);
         mainlayout = (RelativeLayout) findViewById(R.id.mainlayout);
         mainlayout.setOnClickListener(new View.OnClickListener() {
@@ -86,74 +76,18 @@ public class RecentApplicationsDialog extends Dialog { //implements AdapterView.
 				}
 			});
 
-        noApps.setText(com.android.internal.R.string.no_recent_tasks);// getLayout("no_recent_tasks", "string", "android"));
-        //appsLV = new ListView(c);
-        //appsLV.setOnItemClickListener(this);
-		// registerForContextMenu(appsLV);
+        noApps.setText(com.android.internal.R.string.no_recent_tasks);
         am = (ActivityManager) c.getSystemService(c.ACTIVITY_SERVICE);
-
-
-        //adapter = new AppsArrayAdapter(c, getLayout("appsview_item", "layout", "com.meui.SwipeRecentApps"), appsList);
-        //appsLV.setAdapter(adapter);
-
 		mRecents = (RecentsList)findViewById(R.id.recent_frame);
-		//mFrame.setAdapter(adapter);
-
-        /* touchListener = new SwipeDismissListViewTouchListener(
-		 appsLV,
-		 new SwipeDismissListViewTouchListener.OnDismissCallback() {
-		 @Override
-		 public void onDismiss(ListView listView, int[] reverseSortedPositions) {
-		 for (int position : reverseSortedPositions) {
-		 String pkgname = adapter.getItem(position).pkgName;
-		 killApp(pkgname);
-		 try{
-		 adapter.remove(adapter.getItem(position));
-		 }catch(IndexOutOfBoundsException ignored){}
-		 }
-		 adapter.notifyDataSetChanged();
-		 checkNoAppsRunning();
-		 }
-		 });*/
-        //appsLV.setOnTouchListener(touchListener);
-        // Setting this scroll listener is required to ensure that during ListView scrolling,
-        // we don't look for swipes.
-        //appsLV.setOnScrollListener(touchListener.makeScrollListener());
-        //appsLV.setStackFromBottom(true);
-        //appsLV.setTranscriptMode(AbsListView.TRANSCRIPT_MODE_NORMAL);
-        //appsLV.setDividerHeight(0);
-        //appsLV.setOverScrollMode(View.OVER_SCROLL_NEVER);
-        //appsLV.setVerticalScrollBarEnabled(false);
-        //appsLV.setSelector(com.android.internal.R.color.transparent);
-        //appsLV.setCacheColorHint(0x00000000);
-        //appsLV.setFadingEdgeLength(6);
-		//appsLV.setClipToPadding(false);
-
-		//ViewGroup.LayoutParams lp=lin.getLayoutParams();
-		//lp.width=ViewGroup.LayoutParams.MATCH_PARENT;
-        //lin.addView(appsLV,lp);
-		//lp=null;
 		mRecents.setRecent(this);
         checkNoAppsRunning();
     }
 
 
-    /*public void resetadapter(){
-	 adapter.clear();
-	 adapter.notifyDataSetChanged();
-	 }*/
-    /*public void killApp(String PackageName) {
-	 am.killBackgroundProcesses(PackageName);
-	 am.restartPackage(PackageName);
-	 if (!PackageName.equals("com.android.stk")) {
-	 am.forceStopPackage(PackageName);}
-	 }*/
     @Override
     protected void onStart() {
         super.onStart();
-        //resetadapter();
         updateRecentTasks();
-        //adapter.notifyDataSetChanged();
         checkNoAppsRunning();
 		mRecents.setOnItemClickListener(new RecentsList.OnItemClickListener(){
 
@@ -173,7 +107,7 @@ public class RecentApplicationsDialog extends Dialog { //implements AdapterView.
 				}
 			});
 		mRecents.setOnItemLongClickListener(new RecentsList.OnItemLongClickListener(){
-
+				// Kill app.
 				@Override
 				public void onItemLongClick(int position) {
 					try {
@@ -230,22 +164,9 @@ public class RecentApplicationsDialog extends Dialog { //implements AdapterView.
         // stop receiving broadcasts
         getContext().unregisterReceiver(mBroadcastReceiver);
     }
-    /*@Override
-	 public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-	 Intent intent = (Intent)view.getTag(R.id.noapps);
-	 if (intent != null) {
-	 intent.addFlags(Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY);
-	 try {
-	 c.startActivity(intent);
-	 } catch (ActivityNotFoundException e) {
-	 Log.w("Recent", "Unable to launch recent task", e);
-	 }
-	 }
-	 dismiss();
-	 }*/
 
 
-    public void checkNoAppsRunning() {
+    private void checkNoAppsRunning() {
         if (appsList.size() > 0) {
             mRecents.setVisibility(View.VISIBLE);
             noApps.setVisibility(View.GONE);

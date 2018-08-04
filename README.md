@@ -1,26 +1,17 @@
-# SwipeRecentApps
-Swipe to kill recent apps for gingerbread
+# ME Material Recent
+ME Material recent apps for Gingerbread
 
-The src/com/tenten folder is for test purpose only. 
-You can compile this and install like a normal app. 
-Modifications can be made on src/com/tenten folder for tests
+<img src="https://forum.xda-developers.com/attachment.php?attachmentid=4561017&d=1532918683"/>
+<img src="https://forum.xda-developers.com/attachment.php?attachmentid=4561018&d=1532918689"/>
+<img src="https://forum.xda-developers.com/attachment.php?attachmentid=4561019&d=1532918846"/>
 
-On src/com/android/internal/policy/impl, some codes differs from the test folder (tenten)
+XDA Guide: https://forum.xda-developers.com/android/themes/guide-material-recent-t3822766/post77202071
+Simplified Chinese Guide: http://tieba.baidu.com/p/5809131734
 
-IMPORTANT:
 
-libs must be included (nineoldandroids) otherwise, it will not work. (Bug about facebook crashing because of nineoldandroids)
-
-Swipe Recent Apps Guide: http://forum.xda-developers.com/galaxy-y/general/guide-swipe-recent-apps-t2792836/post53632342#post53632342
-
-Credits
-
-Roman Nurik@github,
-JakeWharton@github,
-NineOldAndroids,
-StackoverFlow.com,
-SpaceCaker@xda,
-PineappleOwl@xda,
-mariozawa@xda,
-Lenox Devs,
-Potato Inc
+###  Credits
+tentenponce
+ZieIony
+m0r0
+NineOldAndroids
+And many other people who helped me.

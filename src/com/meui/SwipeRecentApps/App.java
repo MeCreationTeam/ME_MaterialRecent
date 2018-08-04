@@ -26,20 +26,11 @@ public class App {
     public Intent intent;
 	public Drawable icon;
 	
-	public App() {
-		
-	}
-	
 	public App(String name, String pkgName, Intent intent, Drawable icon) {
 		this.name = name;
 		this.pkgName = pkgName;
         this.intent = intent;
 		this.icon = icon;
-	}
-	
-	@Override
-	public String toString() {
-		return this.name;
 	}
 
 }
