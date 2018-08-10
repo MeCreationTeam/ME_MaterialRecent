@@ -4,6 +4,7 @@ import android.app.*;
 import android.content.*;
 import android.content.pm.*;
 import android.graphics.drawable.*;
+import android.net.*;
 import android.os.*;
 import android.util.*;
 import android.view.*;
@@ -12,7 +13,8 @@ import com.android.internal.policy.impl.*;
 import java.util.*;
 import tk.zielony.materialrecents.*;
 
-public class RecentApplicationsDialog extends Dialog { 
+public class RecentApplicationsDialog extends Dialog implements RecentsList.OnRecentEventListener {
+
   	private List<App> appsList = new ArrayList<App>();
     private ActivityManager am;
     private static int NUM_BUTTONS = 7;
@@ -23,9 +25,8 @@ public class RecentApplicationsDialog extends Dialog {
     private RelativeLayout mainlayout;
     private static StatusBarManager sStatusBar;
     IntentFilter mBroadcastIntentFilter = new IntentFilter(Intent.ACTION_CLOSE_SYSTEM_DIALOGS);
-
-
 	private RecentsList mRecents;
+
     public RecentApplicationsDialog(Context context) {
         super(context);
         c = context;
@@ -42,7 +43,7 @@ public class RecentApplicationsDialog extends Dialog {
 		//window.setType(WindowManager.LayoutParams.TYPE_SYSTEM_DIALOG);// You must have this line in your smail code !
 		window.setFlags(WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM,
 						WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM);
- 
+
         setContentView(R.layout.recent_apps_dialog);
 
         final WindowManager.LayoutParams params = window.getAttributes();
@@ -50,10 +51,10 @@ public class RecentApplicationsDialog extends Dialog {
         params.height = WindowManager.LayoutParams.FILL_PARENT;
         window.setAttributes(params);
         window.setFlags(0, WindowManager.LayoutParams.FLAG_DIM_BEHIND);
+		//window.setFlags(WindowManager.LayoutParams.FLAG_BLUR_BEHIND, WindowManager.LayoutParams.FLAG_BLUR_BEHIND);
+		// If you want blur, you can uncomment the line above.
 
-        if (sStatusBar == null) {
-            sStatusBar = (StatusBarManager) c.getSystemService(Context.STATUS_BAR_SERVICE);
-        }
+        if (sStatusBar == null) sStatusBar = (StatusBarManager) c.getSystemService(Context.STATUS_BAR_SERVICE);
 
         taskman = (Button) findViewById(R.id.taskman);
         noApps = (TextView) findViewById(R.id.noapps);
@@ -70,6 +71,7 @@ public class RecentApplicationsDialog extends Dialog {
 					Intent i = new Intent("android.intent.action.MAIN");
 					i.setComponent(new ComponentName("com.sec.android.app.controlpanel", "com.sec.android.app.controlpanel.activity.JobManagerActivity"));
 					i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+					i.addFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
 					Intent closeDialog = new Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS);
 					c.sendBroadcast(closeDialog);
 					c.startActivity(i);
@@ -79,8 +81,7 @@ public class RecentApplicationsDialog extends Dialog {
         noApps.setText(com.android.internal.R.string.no_recent_tasks);
         am = (ActivityManager) c.getSystemService(c.ACTIVITY_SERVICE);
 		mRecents = (RecentsList)findViewById(R.id.recent_frame);
-		mRecents.setRecent(this);
-        checkNoAppsRunning();
+		checkNoAppsRunning();
     }
 
 
@@ -89,45 +90,10 @@ public class RecentApplicationsDialog extends Dialog {
         super.onStart();
         updateRecentTasks();
         checkNoAppsRunning();
-		mRecents.setOnItemClickListener(new RecentsList.OnItemClickListener(){
+		mRecents.setOnRecentEventListener(this);
 
-				@Override
-				public void onItemClick(View view, int position) {
-					if (Build.VERSION.SDK_INT > 20) Toast.makeText(getContext(), "POSITION = " + position, Toast.LENGTH_SHORT).show(); // For test only
-					final Intent intent = appsList.get(appsList.size() - position - 1).intent;
-					if (intent != null) {
-						intent.addFlags(Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY);
-						try {
-							c.startActivity(intent);
-						} catch (ActivityNotFoundException e) {
-							Log.w("Recent", "Unable to launch recent task", e);
-						}
-					}
-					dismiss();
-				}
-			});
-		mRecents.setOnItemLongClickListener(new RecentsList.OnItemLongClickListener(){
-				// Kill app.
-				@Override
-				public void onItemLongClick(int position) {
-					try {
-						String packageName = appsList.get(appsList.size() - position - 1).pkgName;
-						am.killBackgroundProcesses(packageName);
-						am.restartPackage(packageName);
-						if (!packageName.equals("com.android.stk")) {
-							am.forceStopPackage(packageName);
-						}
-					} catch (Exception ex) {
-						Log.w("Recent", "LongPress: ", ex);
-					}
-					Toast.makeText(getContext(), 0x104044c, Toast.LENGTH_SHORT).show();
-				}
-			});
         // receive broadcasts
         getContext().registerReceiver(mBroadcastReceiver, mBroadcastIntentFilter);
-		final int[] cardColors=new int[]{0xff009688,0xff2196f3,0xff9c27b0,0xffff9800,0xff795548,0xff9e9e9e,0xff607d8b, 0xffffffff};
-		final int[] headColors=new int[]{0xff00796b,0xff1976d2,0xff7b1fa2,0xfff57C00,0xff5d4037,0xff616161,0xff455a64, 0xff000000};
-
 		mRecents.setAdapter(new RecentsAdapter() {
 
 				@Override
@@ -137,6 +103,7 @@ public class RecentApplicationsDialog extends Dialog {
 
 				@Override
 				public int getViewColor(int position) {
+					final int[] cardColors=new int[]{0xff009688,0xff2196f3,0xff9c27b0,0xffff9800,0xff795548,0xff9e9e9e,0xff607d8b, 0xffffffff};
 					return cardColors[appsList.size() - position - 1];
 				}
 
@@ -147,6 +114,7 @@ public class RecentApplicationsDialog extends Dialog {
 
 				@Override
 				public int getHeaderColor(int position) {
+					final int[] headColors=new int[]{0xff00796b,0xff1976d2,0xff7b1fa2,0xfff57C00,0xff5d4037,0xff616161,0xff455a64, 0xff000000};
 					return headColors[appsList.size() - position - 1];
 				}
 
@@ -160,7 +128,6 @@ public class RecentApplicationsDialog extends Dialog {
     @Override
     public void onStop() {
         super.onStop();
-
         // stop receiving broadcasts
         getContext().unregisterReceiver(mBroadcastReceiver);
     }
@@ -239,6 +206,57 @@ public class RecentApplicationsDialog extends Dialog {
             }
         }
     }
+
+	@Override
+	public void onItemClick(int position) {
+		if (Build.VERSION.SDK_INT > 20) Toast.makeText(getContext(), "POSITION = " + position, Toast.LENGTH_SHORT).show(); // For test only
+		final Intent intent = appsList.get(appsList.size() - position - 1).intent;
+		if (intent != null) {
+			intent.addFlags(Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY);
+			try {
+				c.startActivity(intent);
+			} catch (ActivityNotFoundException e) {
+				Log.w("Recent", "Unable to launch recent task", e);
+			}
+		}
+		dismiss();
+	}
+
+
+	@Override
+	public void onItemLongClick(int position) {
+		String packageName = appsList.get(appsList.size() - position - 1).pkgName;
+		Intent detail = new Intent("android.settings.APPLICATION_DETAILS_SETTINGS", Uri.fromParts("package", packageName, null));
+		detail.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+		detail.addFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
+		try {
+			c.startActivity(detail);
+		} catch (Exception e) {
+			Log.w("Recent", "Unable to launch app settings", e);
+		}
+		dismiss();
+	}
+
+	@Override
+	public void onItemSwiped(int position) {
+		try {
+			String packageName = appsList.get(appsList.size() - position - 1).pkgName;
+			am.killBackgroundProcesses(packageName);
+			am.restartPackage(packageName);
+			if (!packageName.equals("com.android.stk")) {
+				am.forceStopPackage(packageName);
+			}
+		} catch (Exception ex) {
+			Log.w("Recent", "LongPress: ", ex);
+		}
+		Toast.makeText(getContext(), 0x104044c, Toast.LENGTH_SHORT).show();
+
+	}
+
+	@Override
+	public void onConfigurationChanged() {
+		dismiss();
+	}
 
     /*public int getLayout(String mDrawableName, String typeName, String packName) {
 	 int resID = 0;

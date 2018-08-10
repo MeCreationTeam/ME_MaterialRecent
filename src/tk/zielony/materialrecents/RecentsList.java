@@ -6,8 +6,10 @@ import android.graphics.*;
 import android.graphics.drawable.*;
 import android.util.*;
 import android.view.*;
+import android.view.animation.*;
 import android.widget.*;
 import com.meui.SwipeRecentApps.*;
+import com.noas.animation.*;
 import com.noas.view.*;
 
 /**
@@ -20,18 +22,20 @@ public class RecentsList extends FrameLayout implements GestureDetector.OnGestur
     RecentsAdapter adapter;
     GestureDetector gestureDetector;
     int scroll = 0;
-    OnItemClickListener onItemClickListener;
-	OnItemLongClickListener onItemLongClickListener;
+	OnRecentEventListener mListener;
     Rect childTouchRect[];
-	RecentApplicationsDialog dialog;
+	boolean isFirst = true;
+	private boolean verticalScrolling = false;
+	private boolean horizontalFlinging = false;
+	private int scrolledChild = -1;
+	private VelocityTracker tracker;
 
-    public interface OnItemClickListener {
-        void onItemClick(View view, int position);
-    }
-	public interface OnItemLongClickListener {
-		void onItemLongClick(int position);
+	public interface OnRecentEventListener {
+		void onConfigurationChanged();
+		void onItemClick(int i);
+		void onItemLongClick(int i);
+		void onItemSwiped(int i);
 	}
-
     public RecentsList(Context context) {
         super(context);
         initRecentsList();
@@ -49,18 +53,13 @@ public class RecentsList extends FrameLayout implements GestureDetector.OnGestur
 
     private void initRecentsList() {
         scroller = new Scroller(getContext());
-		setClipChildren(false);
-	    setClipToPadding(false);
+		setClipToPadding(false);
 		gestureDetector = new GestureDetector(getContext(), this);
-		gestureDetector.setIsLongpressEnabled(true);
     }
 
-    public void setOnItemClickListener(OnItemClickListener onItemClickListener) {
-        this.onItemClickListener = onItemClickListener;
+    public void setOnRecentEventListener(OnRecentEventListener listener) {
+        mListener = listener;
     }
-	public void setOnItemLongClickListener(OnItemLongClickListener onItemLongClickListener) {
-		this.onItemLongClickListener = onItemLongClickListener;
-	}
 
     public RecentsAdapter getAdapter() {
         return adapter;
@@ -81,21 +80,16 @@ public class RecentsList extends FrameLayout implements GestureDetector.OnGestur
         if (childTouchRect == null) childTouchRect = new Rect[getChildCount()];
 		for (int i = 0; i < getChildCount(); i++) {
 			getChildAt(i).layout(0, 0, getWidth() - getPaddingLeft() - getPaddingRight(), getWidth() - getPaddingLeft() - getPaddingRight());
-			childTouchRect[i] = new Rect();
+			if (childTouchRect[i] == null) childTouchRect[i] = new Rect();
 		}
     }
-
-	public void setRecent(RecentApplicationsDialog d) {
-		this.dialog = d;
-	}
 
 	@Override
 	protected void onConfigurationChanged(Configuration newConfig) {
 		super.onConfigurationChanged(newConfig);
-		if (dialog != null) {
-			dialog.dismiss();
+		if (mListener != null) {
+			mListener.onConfigurationChanged();
 		}
-		dialog = null;
 	}
 
     private void initChildren() {
@@ -146,15 +140,16 @@ public class RecentsList extends FrameLayout implements GestureDetector.OnGestur
         return (getChildCount() - 1) * (getWidth() - getPaddingLeft() - getPaddingRight());
     }
 
-	boolean isFirst = true;
     @Override
     protected void dispatchDraw(Canvas canvas) {
 		if (isFirst) {
 			scroll = getMaxScroll();
+			layoutChildren();
 		}
-        layoutChildren();
         super.dispatchDraw(canvas);
         isFirst = false;
+		if (verticalScrolling)
+			layoutChildren();
     }
 
 	/*
@@ -192,11 +187,29 @@ public class RecentsList extends FrameLayout implements GestureDetector.OnGestur
 	}
 	@Override
 	public boolean onTouchEvent(MotionEvent event) {
+		switch (event.getAction()) {
+			case MotionEvent.ACTION_MOVE:
+				if (!verticalScrolling) 
+					tracker.addMovement(event);
+				break;
+			case MotionEvent.ACTION_UP:
+				if (!verticalScrolling && scrolledChild != -1) {
+					tracker.computeCurrentVelocity(1000, ViewConfiguration.get(getContext()).getScaledMaximumFlingVelocity());
+					if (Math.abs(tracker.getXVelocity()) < ViewConfiguration.get(getContext()).getScaledMinimumFlingVelocity()) {
+						ViewHelper.setTranslationX(getChildAt(scrolledChild), getPaddingLeft());
+						layoutChildren();
+					}
+				}
+				tracker.clear();
+				tracker.recycle();
+		}
 		return event.getAction() == MotionEvent.ACTION_DOWN || getAdapter() != null & gestureDetector.onTouchEvent(event);
 	}
     @Override
     public boolean onDown(MotionEvent motionEvent) {
 		forceFinished();
+		verticalScrolling = false;
+		tracker = VelocityTracker.obtain();
         return false;
     }
 
@@ -206,10 +219,10 @@ public class RecentsList extends FrameLayout implements GestureDetector.OnGestur
 
     @Override
     public boolean onSingleTapUp(MotionEvent event) {
-		if (onItemClickListener == null) return true;
+		if (mListener == null) return true;
 		for (int i = getChildCount() - 1;i >= 0; i--) {
 			if (childTouchRect[i].contains((int) event.getX(), (int) event.getY())) {
-				onItemClickListener.onItemClick(getChildAt(i), i);
+				mListener.onItemClick(i);
 				break;
 			}
 		}
@@ -218,6 +231,22 @@ public class RecentsList extends FrameLayout implements GestureDetector.OnGestur
 
     @Override
     public boolean onScroll(MotionEvent motionEvent, MotionEvent motionEvent2, float v, float v2) {
+		int deltaX = (int) (motionEvent2.getX() - motionEvent.getX());
+		if (!verticalScrolling && Math.abs(deltaX) > Math.abs(motionEvent.getY() - motionEvent2.getY())) {
+			if (horizontalFlinging) {
+				scrolledChild = -1;
+				return false;
+			}
+			for (int i = getChildCount() - 1; i >= 0; i--) {
+				if (childTouchRect[i].contains((int) motionEvent.getX(), (int) motionEvent.getY())) {
+					scrolledChild = i;
+                    ViewHelper.setTranslationX(getChildAt(i), deltaX);
+                    return true;
+                }
+            }
+			return false;
+		}
+		verticalScrolling = true;
         scroll = (int) Math.max(0, Math.min(scroll + v2, getMaxScroll()));
         postInvalidate();
         return false;
@@ -225,11 +254,11 @@ public class RecentsList extends FrameLayout implements GestureDetector.OnGestur
 
     @Override
     public void onLongPress(MotionEvent event) {
-		if (onItemLongClickListener == null)
+		if (mListener == null)
 			return;
 		for (int i = getChildCount() - 1;i >= 0; i--) {
 			if (childTouchRect[i].contains((int) event.getX(), (int) event.getY())) {
-				onItemLongClickListener.onItemLongClick(i);
+				mListener.onItemLongClick(i);
 				break;
 			}
 		}
@@ -266,10 +295,58 @@ public class RecentsList extends FrameLayout implements GestureDetector.OnGestur
     }
 
     @Override
-    public boolean onFling(MotionEvent motionEvent, MotionEvent motionEvent2, float v, float v2) {
+    public boolean onFling(MotionEvent motionEvent, MotionEvent motionEvent2, float velocityX, float velocityY) {
 		forceFinished();
-        startScrolling(-v2 * 2);
-        return true;
+		int deltaX = (int) (motionEvent2.getX() - motionEvent.getX());
+		if (verticalScrolling || Math.abs(deltaX) <= Math.abs(motionEvent.getY() - motionEvent2.getY())) {
+			verticalScrolling = true;
+			startScrolling(-velocityY * 2);
+			return true;
+		}
+		if (horizontalFlinging) return true;
+		for (int i = getChildCount() - 1;i >= 0; i--) {
+			if (childTouchRect[i].contains((int) motionEvent.getX(), (int) motionEvent.getY())) {
+				horizontalFlinging = true;
+				final int finalI = i;
+				long duration = 250000 / (long) Math.abs(velocityX); // You can adjust the value by yourself.
+				if (deltaX * velocityX <= 0) {
+					ViewPropertyAnimator.animate(getChildAt(finalI)).setDuration(duration).translationX(getPaddingLeft()).start();
+					horizontalFlinging = false;
+					break;
+				}
+				ViewPropertyAnimator.animate(getChildAt(i)).setDuration(duration).setInterpolator(new DecelerateInterpolator()).setListener(new Animator.AnimatorListener() {
+						@Override
+						public void onAnimationStart(Animator animation) {}
+						@Override
+						public void onAnimationEnd(Animator animation) {
+							ViewPropertyAnimator.animate(getChildAt(finalI)).setDuration(100).translationX(getPaddingLeft()).setListener(new Animator.AnimatorListener(){
+
+									@Override
+									public void onAnimationStart(Animator animation) {
+									}
+									@Override
+									public void onAnimationEnd(Animator animation) {
+										horizontalFlinging = false;
+										ViewPropertyAnimator.animate(getChildAt(finalI)).setListener(null);
+										if (mListener != null) mListener.onItemSwiped(finalI);
+									}
+									@Override
+									public void onAnimationCancel(Animator animation) {
+									}
+									@Override
+									public void onAnimationRepeat(Animator animation) {
+									}
+								}).start();
+						}
+						@Override
+						public void onAnimationCancel(Animator animation) {}
+						@Override
+						public void onAnimationRepeat(Animator animation) {}
+					}).translationX(deltaX > 0 ? getWidth() : -getWidth()).start();
+				break;
+			}
+		}
+		return true;
     }
 
 }
